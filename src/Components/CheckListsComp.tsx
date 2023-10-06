@@ -85,7 +85,7 @@ function CheckListsComp() {
         });
         await item.update({
           $set: {
-            description: newItemData.description,
+            description: newItemData.description.trim(),
           },
         });
         setIsModalOpen(false);
@@ -99,8 +99,8 @@ function CheckListsComp() {
         const tasks = await getTasksCollection(db);
         // Create a new document with title and description
         const newItem = await tasks?.insert({
-          title: newItemData.task,
-          description: newItemData.description,
+          title: newItemData.task.trim(),
+          description: newItemData.description.trim(),
           status: newItemData.status,
           checkList: checkList,
           createdAt: Date.now(),
@@ -129,7 +129,7 @@ function CheckListsComp() {
 
       await item.update({
         $set: {
-          status: result,
+          status: result.trim(),
         },
       });
       // Trigger the useEffect to fetch updated data
@@ -153,48 +153,64 @@ function CheckListsComp() {
           </div>
         </div>
 
-        <div className=" pb-4  border-[#e1e3e5] bg-white">
+        <div className=" pb-4  border-[#e1e3e5] bg-white ">
           {/* checklist condition  */}
-          {checkList ? (
-            <div>
+          <div>
+            <div
+              className="flex ml-4 justify-between cursor-pointer  py-2"
+              onClick={toggleDropdown}
+            >
               <div
-                className="flex ml-4 justify-between cursor-pointer"
-                onClick={toggleDropdown}
+                onClick={() => {
+                  setCheckList("checkList1");
+                }}
+                className="text-[#0c0d0d] font-['Roboto'] text-lg font-semibold leading-[normal] "
               >
-                <div
-                  onClick={() => {
-                    setCheckList("checkList1");
-                  }}
-                  className="text-[#0c0d0d] font-['Roboto'] text-lg font-semibold leading-[normal] mt-4 h-8"
+                <span
+                  className={checkList === "checkList1" ? "text-blue-300" : ""}
                 >
-                  {checkList === "checkList1" ? "Check List" : "2nd Check List"}
-                </div>
+                  {" "}
+                  Check List{" "}
+                </span>
+              </div>
+              {checkList === "checkList1" && (
                 <img
                   src={arrow}
                   alt="arrow-logo"
-                  className={`h-3 w-3 mt-5 mr-8 ${
-                    isDropdownOpen ? "rotate-180" : ""
-                  }`}
+                  className={`h-3 w-3 mt-2 mr-8 rotate-180`}
                 />
-              </div>
+              )}
             </div>
-          ) : (
-            ""
-          )}
-          {isDropdownOpen && (
-            <ul className="pl-4 cursor-pointer">
-              <li
-                className="py-1 flex items-center"
-                onClick={handleSecondChecklistClick}
+          </div>
+          <div>
+            <div
+              className="flex ml-4 justify-between cursor-pointer py-2"
+              onClick={toggleDropdown}
+            >
+              <div
+                onClick={() => {
+                  setCheckList("secondChecklist");
+                }}
+                className="text-[#0c0d0d] font-['Roboto'] text-lg font-semibold leading-[normal] "
               >
-                <div className="text-[#0c0d0d] font-['Roboto'] text-lg font-semibold leading-[normal]">
-                  {checkList !== "secondChecklist"
-                    ? "2nd Check List"
-                    : "Check List"}
-                </div>
-              </li>
-            </ul>
-          )}
+                <span
+                  className={
+                    checkList === "secondChecklist" ? "text-blue-300" : ""
+                  }
+                >
+                  {" "}
+                  2nd Check List{" "}
+                </span>
+              </div>
+              {checkList === "secondChecklist" && (
+                <img
+                  src={arrow}
+                  alt="arrow-logo"
+                  className={`h-3 w-3 mr-8 rotate-180`}
+                />
+              )}
+            </div>
+          </div>
 
           <div className="py-1 border h-12 flex items-center ">
             <img src={CI} alt="CI-logo" className=" ml-3" />
