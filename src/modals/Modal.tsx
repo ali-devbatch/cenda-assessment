@@ -10,12 +10,16 @@ interface AddNewItemModalProps {
     description: string;
     status: string;
   }) => void;
+  openModal: () => void;
+  isUpdateDescription: boolean;
+  newItemDataLatest: string;
 }
 
 const AddNewItemModal: React.FC<AddNewItemModalProps> = ({
   isOpen,
   onClose,
   onSave,
+  isUpdateDescription,
 }) => {
   const [newItemData, setNewItemData] = useState({
     task: "",
@@ -68,8 +72,8 @@ const AddNewItemModal: React.FC<AddNewItemModalProps> = ({
                     >
                       Add New Task
                     </Dialog.Title>
-                    <div className="mt-2">
-                      <form>
+                    <div className="mt-2 w-[250%]">
+                      <form className="">
                         <div>
                           <label
                             htmlFor="task"
@@ -79,7 +83,11 @@ const AddNewItemModal: React.FC<AddNewItemModalProps> = ({
                           </label>
                           <div className="mt-1">
                             <input
-                              className="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-blue-900 rounded-md h-8 pl-4"
+                              className={`border ${
+                                isUpdateDescription
+                                  ? "border-red-500"
+                                  : "border-blue-900"
+                              } shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-blue-900 rounded-md h-8 pl-4`}
                               type="text"
                               value={newItemData.task}
                               onChange={(e) =>
@@ -91,6 +99,7 @@ const AddNewItemModal: React.FC<AddNewItemModalProps> = ({
                               placeholder="Enter Task Here..."
                               name="task"
                               id="task"
+                              disabled={isUpdateDescription}
                             />
                           </div>
                         </div>
@@ -103,7 +112,7 @@ const AddNewItemModal: React.FC<AddNewItemModalProps> = ({
                           </label>
                           <div className="mt-1">
                             <input
-                              className="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-blue-900 rounded-md h-8 pl-4"
+                              className="border shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-blue-900 rounded-md h-8 pl-4"
                               type="text"
                               value={newItemData.description}
                               onChange={(e) =>

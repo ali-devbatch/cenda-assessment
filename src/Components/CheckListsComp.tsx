@@ -19,8 +19,11 @@ function CheckListsComp() {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false); // State for the modal
   const [tasks, setTasks] = useState([]);
+  const [newItemDataLatest, setNewItemDataLatest] = useState("");
   // State to track the modal's open/closed state
   const [isModalClosed, setIsModalClosed] = useState(true);
+  const [isUpdateDescription, setIsUpdateDescription] = useState(false);
+  const [toGetTitle, setToGetTitle] = useState("");
 
   // Fetch data from RxDB when the component mounts
   useEffect(() => {
@@ -37,6 +40,15 @@ function CheckListsComp() {
 
     fetchData();
   }, [isModalClosed]);
+
+  // In CheckListsComp component when updating description
+  const openModalToUpdateDescription = (description: any) => {
+    // Set the description in the newItemDataLatest state
+    setNewItemDataLatest(description);
+
+    setIsModalOpen(true);
+    setIsUpdateDescription(true); // Set the modal to update description mode
+  };
 
   //dropdown function
   const toggleDropdown = () => {
@@ -57,33 +69,55 @@ function CheckListsComp() {
   // Function to close the modal
   const closeModal = () => {
     setIsModalOpen(false);
+    setIsUpdateDescription(false);
   };
 
   // Function to handle saving a new item
   const handleSaveNewItem = async (newItemData: any) => {
-    try {
-      const db = await createDatabaseOwn();
-      const tasks = await getTasksCollection(db);
-
-      // Create a new document with title and description
-      const newItem = await tasks?.insert({
-        title: newItemData.task,
-        description: newItemData.description,
-        status: newItemData.status,
-        checkList: checkList,
-        createdAt: Date.now(),
-        completed: false, // You can set other properties as needed
-      });
-      setIsModalOpen(false);
-      setIsModalClosed(!isModalClosed);
-      console.log("Item saved:", newItem);
-    } catch (error) {
-      console.error("Error saving item:", error);
+    if (isUpdateDescription) {
+      try {
+        const db = await createDatabaseOwn();
+        const tasks = await getTasksCollection(db);
+        const item = await tasks.find({
+          selector: {
+            title: toGetTitle,
+          },
+        });
+        await item.update({
+          $set: {
+            description: newItemData.description,
+          },
+        });
+        setIsModalOpen(false);
+        setIsModalClosed(!isModalClosed);
+      } catch (error) {
+        console.error("Error changing status:", error);
+      }
+    } else {
+      try {
+        const db = await createDatabaseOwn();
+        const tasks = await getTasksCollection(db);
+        // Create a new document with title and description
+        const newItem = await tasks?.insert({
+          title: newItemData.task,
+          description: newItemData.description,
+          status: newItemData.status,
+          checkList: checkList,
+          createdAt: Date.now(),
+          completed: false, // You can set other properties as needed
+        });
+        setIsModalOpen(false);
+        setIsModalClosed(!isModalClosed);
+      } catch (error) {
+        console.error("Error saving item:", error);
+      }
     }
+    setIsUpdateDescription(false);
   };
 
   //function to change status
   const changeStatus = async (status: any, result: any) => {
+    setToGetTitle(status);
     try {
       const db = await createDatabaseOwn();
       const tasks = await getTasksCollection(db);
@@ -100,7 +134,6 @@ function CheckListsComp() {
       });
       // Trigger the useEffect to fetch updated data
       setIsModalClosed(!isModalClosed);
-      // }
     } catch (error) {
       console.error("Error changing status:", error);
     }
@@ -164,7 +197,7 @@ function CheckListsComp() {
           )}
 
           <div className="py-1 border h-12 flex items-center ">
-            <img src={CI} alt="CI-logo" className="h-8 w-7 ml-3" />
+            <img src={CI} alt="CI-logo" className=" ml-3" />
             <div className=" flex items-center ml-3 w-3/4">
               <h5> Light Bulb 150S</h5>
             </div>
@@ -188,8 +221,12 @@ function CheckListsComp() {
                             ? "Started"
                             : items?._data?.status === "Started"
                             ? "Done"
+                            : items?._data?.status === "Done"
+                            ? "Blocked"
                             : "notStarted";
                         await changeStatus(items?._data?.title, result);
+                        openModal(); // Call openModal to open the modal
+                        openModalToUpdateDescription(items?._data?.description);
                       }}
                       src={
                         items?._data?.status === "notStarted"
@@ -198,10 +235,12 @@ function CheckListsComp() {
                           ? `${noneChecklist}`
                           : items?._data?.status === "Done"
                           ? `${doneChecklist}`
+                          : items?._data?.status === "Blocked"
+                          ? `${danger}`
                           : ""
                       }
                       alt="white-logo"
-                      className="h-8 w-7 ml-3 cursor-pointer"
+                      className=" ml-3 cursor-pointer"
                     />
                     <div className=" ml-4">
                       <h5>{items?._data?.title}</h5>
@@ -214,6 +253,8 @@ function CheckListsComp() {
                               ? `${blueDot}`
                               : items?._data?.status === "Done"
                               ? `${greenDot}`
+                              : items?._data?.status === "Blocked"
+                              ? `${redDot}`
                               : ""
                           }
                           alt="whiteDot-logo"
@@ -221,11 +262,13 @@ function CheckListsComp() {
                         />
                         <p className="ml-2 text-[.7rem] text-slate-400">
                           {items?._data?.status === "notStarted"
-                            ? `Not Started ${items?._data?.description}`
+                            ? `Not Started : ${items?._data?.description}`
                             : items?._data?.status === "Started"
-                            ? `Started ${items?._data?.description}`
+                            ? `Started : ${items?._data?.description}`
                             : items?._data?.status === "Done"
-                            ? `Done ${items?._data?.description}`
+                            ? `Done : ${items?._data?.description}`
+                            : items?._data?.status === "Blocked"
+                            ? `Blocked : ${items?._data?.description}`
                             : ""}
                         </p>
                       </div>
@@ -262,6 +305,9 @@ function CheckListsComp() {
           isOpen={isModalOpen}
           onClose={closeModal}
           onSave={handleSaveNewItem}
+          openModal={openModal}
+          isUpdateDescription={isUpdateDescription}
+          newItemDataLatest={newItemDataLatest}
         />
       ) : (
         ""
