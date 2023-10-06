@@ -305,10 +305,10 @@ function CheckListsComp() {
             <img
               src={addChecklist}
               alt="addChecklist-logo"
-              className="h-8 w-7 ml-3"
+              className=" ml-3"
             />
             <div className=" ml-4">
-              <h5 className="text-[#2b87e3] font-['Roboto'] font-medium leading-[1.375rem]">
+              <h5 className="text-[#2b87e3]  font-medium ">
                 ADD NEW ITEM
               </h5>
             </div>
