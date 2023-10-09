@@ -13,6 +13,7 @@ interface AddNewItemModalProps {
   openModal: () => void;
   isUpdateDescription: boolean;
   newItemDataLatest: string;
+  title: string;
 }
 
 const AddNewItemModal: React.FC<AddNewItemModalProps> = ({
@@ -20,6 +21,7 @@ const AddNewItemModal: React.FC<AddNewItemModalProps> = ({
   onClose,
   onSave,
   isUpdateDescription,
+  title,
 }) => {
   const [newItemData, setNewItemData] = useState({
     task: "",
@@ -89,7 +91,9 @@ const AddNewItemModal: React.FC<AddNewItemModalProps> = ({
                                   : "border-blue-900"
                               } shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-blue-900 rounded-md h-8 pl-4`}
                               type="text"
-                              value={newItemData.task}
+                              value={
+                                isUpdateDescription ? title : newItemData.task
+                              }
                               onChange={(e) =>
                                 setNewItemData({
                                   ...newItemData,
