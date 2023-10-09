@@ -13,6 +13,9 @@ import arrow from "../assets/images/arrow.png";
 import React, { useEffect, useState } from "react";
 import AddNewItemModal from "../modals/Modal";
 import { createDatabaseOwn, getTasksCollection } from "../db/db";
+import editIcon from "../assets/icons/edit.svg";
+import deleteIcon from "../assets/icons/delete.svg";
+import ConfirmationModal from "../modals/ConfirmationModal";
 
 function CheckListsComp() {
   const [checkList, setCheckList] = useState("checkList1");
@@ -20,10 +23,13 @@ function CheckListsComp() {
   const [isModalOpen, setIsModalOpen] = useState(false); // State for the modal
   const [tasks, setTasks] = useState([]);
   const [newItemDataLatest, setNewItemDataLatest] = useState("");
+  const [titleToProp, setTitleToProp] = useState("");
   // State to track the modal's open/closed state
   const [isModalClosed, setIsModalClosed] = useState(true);
   const [isUpdateDescription, setIsUpdateDescription] = useState(false);
   const [toGetTitle, setToGetTitle] = useState("");
+  const [isDeleteConfirmationOpen, setIsDeleteConfirmationOpen] =
+    useState(false);
 
   // Fetch data from RxDB when the component mounts
   useEffect(() => {
@@ -80,7 +86,7 @@ function CheckListsComp() {
         const tasks = await getTasksCollection(db);
         const item = await tasks.find({
           selector: {
-            title: toGetTitle,
+            title: titleToProp,
           },
         });
         await item.update({
@@ -136,6 +142,36 @@ function CheckListsComp() {
       setIsModalClosed(!isModalClosed);
     } catch (error) {
       console.error("Error changing status:", error);
+    }
+  };
+
+  // function to open delete confirmation
+  const openDeleteConfirmationModal = () => {
+    setIsDeleteConfirmationOpen(true);
+  };
+
+  // function to close delete confirmation
+  const closeDeleteConfirmationModal = () => {
+    setIsDeleteConfirmationOpen(false);
+  };
+
+  // function to delete an item
+  const handleDeleteEntry = async () => {
+    try {
+      const db = await createDatabaseOwn();
+      const tasks = await getTasksCollection(db);
+      const item = await tasks.find({
+        selector: {
+          title: titleToProp,
+        },
+      });
+      if (item) {
+        await item.remove();
+      }
+      setIsDeleteConfirmationOpen(false);
+      setIsModalClosed(!isModalClosed);
+    } catch (error) {
+      console.error("Error deleting entry:", error);
     }
   };
 
@@ -229,7 +265,7 @@ function CheckListsComp() {
             if (items?._data?.checkList === checkList) {
               return (
                 <div key={index}>
-                  <div className="py-1 flex items-center ">
+                  <div className="py-1 flex items-center border">
                     <img
                       onClick={async () => {
                         let result =
@@ -241,8 +277,6 @@ function CheckListsComp() {
                             ? "Blocked"
                             : "notStarted";
                         await changeStatus(items?._data?.title, result);
-                        openModal(); // Call openModal to open the modal
-                        openModalToUpdateDescription(items?._data?.description);
                       }}
                       src={
                         items?._data?.status === "notStarted"
@@ -276,18 +310,60 @@ function CheckListsComp() {
                           alt="whiteDot-logo"
                           className="h-3 w-3"
                         />
-                        <p className="ml-2 text-[.7rem] text-slate-400">
+                        <p className="ml-2 text-[.7rem] text-slate-400 w-80">
                           {items?._data?.status === "notStarted"
-                            ? `Not Started : ${items?._data?.description}`
+                            ? items?._data?.description
+                              ? `Not Started : ${items?._data?.description}`
+                              : "Not Started"
                             : items?._data?.status === "Started"
-                            ? `Started : ${items?._data?.description}`
+                            ? items?._data?.description
+                              ? `Started : ${items?._data?.description}`
+                              : "Started"
                             : items?._data?.status === "Done"
-                            ? `Done : ${items?._data?.description}`
+                            ? items?._data?.description
+                              ? `Done : ${items?._data?.description}`
+                              : "Done"
                             : items?._data?.status === "Blocked"
-                            ? `Blocked : ${items?._data?.description}`
+                            ? items?._data?.description
+                              ? `Blocked : ${items?._data?.description}`
+                              : "Blocked"
                             : ""}
                         </p>
                       </div>
+                      <span className="flex cursor-pointer">
+                        {" "}
+                        <button
+                          onClick={() => {
+                            openModal(); // Call openModal to open the modal
+                            openModalToUpdateDescription(
+                              items?._data?.description
+                            );
+                            setTitleToProp(items?._data?.title);
+                          }}
+                          className="flex text-white bg-blue-500 rounded px-2 my-1 py-1"
+                        >
+                          Edit{" "}
+                          <img
+                            src={editIcon}
+                            alt="edit icon"
+                            className=" ml-2"
+                          />{" "}
+                        </button>
+                        <button
+                          onClick={() => {
+                            openDeleteConfirmationModal();
+                            setTitleToProp(items?._data?.title);
+                          }}
+                          className="flex text-white bg-red-600 rounded px-2 my-1 ml-2 py-1"
+                        >
+                          Delete{" "}
+                          <img
+                            src={deleteIcon}
+                            alt="edit icon"
+                            className=" ml-2"
+                          />{" "}
+                        </button>
+                      </span>
                     </div>
                   </div>
                 </div>
@@ -302,15 +378,9 @@ function CheckListsComp() {
             onClick={openModal}
             className="py-1 flex items-center cursor-pointer"
           >
-            <img
-              src={addChecklist}
-              alt="addChecklist-logo"
-              className=" ml-3"
-            />
+            <img src={addChecklist} alt="addChecklist-logo" className=" ml-3" />
             <div className=" ml-4">
-              <h5 className="text-[#2b87e3]  font-medium ">
-                ADD NEW ITEM
-              </h5>
+              <h5 className="text-[#2b87e3]  font-medium ">ADD NEW ITEM</h5>
             </div>
           </div>
         </div>
@@ -324,9 +394,18 @@ function CheckListsComp() {
           openModal={openModal}
           isUpdateDescription={isUpdateDescription}
           newItemDataLatest={newItemDataLatest}
+          title={titleToProp}
         />
       ) : (
         ""
+      )}
+      {isDeleteConfirmationOpen && (
+        <ConfirmationModal
+          onConfirm={
+            handleDeleteEntry
+          }
+          onCancel={closeDeleteConfirmationModal}
+        />
       )}
     </div>
   );
