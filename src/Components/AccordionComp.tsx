@@ -15,9 +15,7 @@ import noneChecklist from "../assets/images/noneChecklist.png";
 import whiteDot from "../assets/images/whiteDot.png";
 import redDot from "../assets/images/redDot.png";
 import blueDot from "../assets/images/blueDot.png";
-import yellowDot from "../assets/images/yellowDot.png";
 import greenDot from "../assets/images/greenDot.png";
-import arrow from "../assets/images/arrow.png";
 import AddNewItemModal from "../modals/Modal";
 import { createDatabaseOwn, getTasksCollection } from "../db/db";
 import editIcon from "../assets/icons/edit.svg";
@@ -26,33 +24,45 @@ import ConfirmationModal from "../modals/ConfirmationModal";
 
 function AccordionComp() {
   const [checkList, setCheckList] = useState("checkList1");
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false); // State for the modal
   const [tasks, setTasks] = useState([]);
   const [newItemDataLatest, setNewItemDataLatest] = useState("");
   const [titleToProp, setTitleToProp] = useState("");
-  // State to track the modal's open/closed state
   const [isModalClosed, setIsModalClosed] = useState(true);
   const [isUpdateDescription, setIsUpdateDescription] = useState(false);
   const [toGetTitle, setToGetTitle] = useState("");
+  const [totalCheckList1, setTotalCheckList1] = useState(0);
+  const [totalSecondChecklist, setTotalSecondChecklist] = useState(0);
   const [isDeleteConfirmationOpen, setIsDeleteConfirmationOpen] =
     useState(false);
 
-  // Fetch data from RxDB when the component mounts
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const db = await createDatabaseOwn();
-        const tasksCollection = await getTasksCollection(db);
-        const allTasks = await tasksCollection.find().exec();
-        setTasks(allTasks);
-      } catch (error) {
-        console.error("Error fetching items:", error);
-      }
-    };
-
+    // Fetch data from RxDB when the component mounts
     fetchData();
   }, [isModalClosed]);
+
+  // Fetch data from RxDB when the component mounts
+  const fetchData = async () => {
+    try {
+      const db = await createDatabaseOwn();
+      const tasksCollection = await getTasksCollection(db);
+      const allTasks = await tasksCollection.find().exec();
+      setTasks(allTasks);
+      // Calculate the count for checkList1
+      const checkList1Items = allTasks.filter((items: any) => {
+        return items?._data?.checkList === "checkList1";
+      });
+      // Calculate the count for secondChecklist
+      const secondChecklistItems = allTasks.filter((items: any) => {
+        return items?._data?.checkList === "secondChecklist";
+      });
+      // Set the counts
+      setTotalCheckList1(checkList1Items.length);
+      setTotalSecondChecklist(secondChecklistItems.length);
+    } catch (error) {
+      console.error("Error fetching items:", error);
+    }
+  };
 
   // In CheckListsComp component when updating description
   const openModalToUpdateDescription = (description: any) => {
@@ -61,17 +71,6 @@ function AccordionComp() {
 
     setIsModalOpen(true);
     setIsUpdateDescription(true); // Set the modal to update description mode
-  };
-
-  //dropdown function
-  const toggleDropdown = () => {
-    setIsDropdownOpen(!isDropdownOpen);
-  };
-
-  //2nd checkList function
-  const handleSecondChecklistClick = () => {
-    setCheckList("secondChecklist");
-    setIsDropdownOpen(false); // Close the dropdown
   };
 
   // Function to open the modal
@@ -83,6 +82,7 @@ function AccordionComp() {
   const closeModal = () => {
     setIsModalOpen(false);
     setIsUpdateDescription(false);
+    setNewItemDataLatest("");
   };
 
   // Function to handle saving a new item
@@ -193,7 +193,7 @@ function AccordionComp() {
                 }}
                 className="flex-1 text-left"
               >
-                <span className="font-bold text-navy-900 dark:text-white ml-4">
+                <span className="font-bold text-navy-900 dark:text-white ml-4 ">
                   CheckList 1
                 </span>
               </div>
@@ -204,6 +204,16 @@ function AccordionComp() {
             className="text-left text-medium mt-2 !text-navy-900 dark:!text-white"
             pb={4}
           >
+            <div className="py-1 border h-12 flex items-center ">
+              <img src={CI} alt="CI-logo" className=" ml-3" />
+              <div className=" flex items-center ml-3 w-3/4">
+                <h5> Light Bulb 150S</h5>
+              </div>
+
+              <p className="text-end  w-1/4 mr-4 text-[.7rem] text-slate-400">
+                {totalCheckList1} STEPS
+              </p>
+            </div>
             <ul>
               {tasks.map((items: any, index: any) => {
                 if (items?._data?.checkList === checkList) {
@@ -273,8 +283,7 @@ function AccordionComp() {
                               : ""}
                           </p>
                         </div>
-                        <span className="flex cursor-pointer">
-                          {" "}
+                        <span className="flex mt-1">
                           <button
                             onClick={() => {
                               openModal(); // Call openModal to open the modal
@@ -283,13 +292,13 @@ function AccordionComp() {
                               );
                               setTitleToProp(items?._data?.title);
                             }}
-                            className="flex text-white bg-blue-500 rounded px-2 my-1 py-1"
+                            className="flex text-white bg-blue-500 rounded h-6 w-16  items-center justify-around"
                           >
-                            Edit{" "}
+                            <span> Edit </span>
                             <img
                               src={editIcon}
                               alt="edit icon"
-                              className=" ml-2"
+                              className="h-4 w-4"
                             />{" "}
                           </button>
                           <button
@@ -297,13 +306,13 @@ function AccordionComp() {
                               openDeleteConfirmationModal();
                               setTitleToProp(items?._data?.title);
                             }}
-                            className="flex text-white bg-red-600 rounded px-2 my-1 ml-2 py-1"
+                            className="flex text-white bg-red-600 rounded h-6 w-20  items-center justify-around ml-2"
                           >
                             Delete{" "}
                             <img
                               src={deleteIcon}
                               alt="edit icon"
-                              className=" ml-2"
+                              className="h-4 w-4"
                             />{" "}
                           </button>
                         </span>
@@ -336,6 +345,16 @@ function AccordionComp() {
             className="text-medium mt-2 text-left !text-navy-900 dark:!text-white"
             pb={4}
           >
+            <div className="py-1 border h-12 flex items-center ">
+              <img src={CI} alt="CI-logo" className=" ml-3" />
+              <div className=" flex items-center ml-3 w-3/4">
+                <h5> Light Bulb 150S</h5>
+              </div>
+
+              <p className="text-end  w-1/4 mr-4 text-[.7rem] text-slate-400">
+                {totalSecondChecklist} STEPS
+              </p>
+            </div>
             <ul>
               {tasks.map((items: any, index: any) => {
                 if (items?._data?.checkList === checkList) {
@@ -385,7 +404,7 @@ function AccordionComp() {
                             alt="whiteDot-logo"
                             className="h-3 w-3"
                           />
-                          <p className="ml-2 text-[.7rem] text-slate-400 w-80">
+                          <p className="ml-2 text-[.7rem] text-slate-400 w-full pr-4">
                             {items?._data?.status === "notStarted"
                               ? items?._data?.description
                                 ? `Not Started : ${items?._data?.description}`
@@ -405,7 +424,7 @@ function AccordionComp() {
                               : ""}
                           </p>
                         </div>
-                        <span className="flex cursor-pointer">
+                        <span className="flex mt-1">
                           {" "}
                           <button
                             onClick={() => {
@@ -415,13 +434,13 @@ function AccordionComp() {
                               );
                               setTitleToProp(items?._data?.title);
                             }}
-                            className="flex text-white bg-blue-500 rounded px-2 my-1 py-1"
+                            className="flex text-white bg-blue-500 rounded h-6 w-16  items-center justify-around"
                           >
                             Edit{" "}
                             <img
                               src={editIcon}
                               alt="edit icon"
-                              className=" ml-2"
+                              className="h-4 w-4"
                             />{" "}
                           </button>
                           <button
@@ -429,13 +448,13 @@ function AccordionComp() {
                               openDeleteConfirmationModal();
                               setTitleToProp(items?._data?.title);
                             }}
-                            className="flex text-white bg-red-600 rounded px-2 my-1 ml-2 py-1"
+                            className="flex text-white bg-red-600 rounded h-6 w-20  items-center justify-around ml-2"
                           >
                             Delete{" "}
                             <img
                               src={deleteIcon}
                               alt="edit icon"
-                              className=" ml-2"
+                              className="h-4 w-4"
                             />{" "}
                           </button>
                         </span>
@@ -449,16 +468,6 @@ function AccordionComp() {
           </AccordionPanel>
         </AccordionItem>
       </Accordion>
-      <div className="py-1 border h-12 flex items-center ">
-        <img src={CI} alt="CI-logo" className=" ml-3" />
-        <div className=" flex items-center ml-3 w-3/4">
-          <h5> Light Bulb 150S</h5>
-        </div>
-
-        <p className="text-end  w-1/4 mr-4 text-[.7rem] text-slate-400">
-          7 STEPS
-        </p>
-      </div>
       <div
         onClick={openModal}
         className="py-1 flex items-center cursor-pointer"
