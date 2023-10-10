@@ -21,6 +21,7 @@ const AddNewItemModal: React.FC<AddNewItemModalProps> = ({
   onClose,
   onSave,
   isUpdateDescription,
+  newItemDataLatest,
   title,
 }) => {
   const [newItemData, setNewItemData] = useState({
@@ -34,7 +35,6 @@ const AddNewItemModal: React.FC<AddNewItemModalProps> = ({
     setNewItemData({ task: "", description: "", status: "" }); // Clear the input fields
     onClose(); // Close the modal
   };
-
   return (
     <Transition.Root show={isOpen} as={Fragment}>
       <Dialog
@@ -118,7 +118,7 @@ const AddNewItemModal: React.FC<AddNewItemModalProps> = ({
                             <input
                               className="border shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-blue-900 rounded-md h-8 pl-4"
                               type="text"
-                              value={newItemData.description}
+                              defaultValue={newItemDataLatest}
                               onChange={(e) =>
                                 setNewItemData({
                                   ...newItemData,
