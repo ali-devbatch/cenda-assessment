@@ -1,3 +1,8 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+input:focus {
+  outline: none; /* Remove the default focus outline */
+  box-shadow: none; /* Remove any focus box-shadow */
+}
